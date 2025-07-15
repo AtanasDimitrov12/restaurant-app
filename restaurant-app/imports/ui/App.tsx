@@ -1,6 +1,16 @@
 import React from 'react';
-import { LandingPage } from './LandingPage';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
-export const App = () => {
-  return <LandingPage />;
+import { LandingPage } from './LandingPage';
+import { BookingPage } from './BookingPage';
+
+export const App: React.FC = () => {
+  return (
+    <Router>
+      <Switch>
+        <Route exact path="/" component={LandingPage} />
+        <Route path="/booking" component={BookingPage} />
+      </Switch>
+    </Router>
+  );
 };

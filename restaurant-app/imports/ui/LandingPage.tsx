@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Typography, Link, Button, IconButton } from '@mui/material';
+import { Box, Typography, Button, IconButton } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import { Link } from 'react-router-dom';
 
 export const LandingPage = () => {
   return (
@@ -16,25 +17,27 @@ export const LandingPage = () => {
     >
       {/* HEADER */}
       <Box
-  sx={{
-    background: 'linear-gradient(to bottom, #001F3F 50%, #f5f5f5 100%)',
-    color: '#fff',
-    textAlign: 'center',
-    py: 6,
-  }}
->
-  <Typography
-    variant="h3"
-    fontWeight="bold"
-    sx={{
-      background: 'linear-gradient(to bottom, #f5f5f5, #001F3F)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-    }}
-  >
-    Foodie
-  </Typography>
-</Box>
+        sx={{
+          background: 'linear-gradient(to bottom, #001F3F 50%, #f5f5f5 100%)',
+          color: '#fff',
+          textAlign: 'center',
+          py: 2,
+          height: '150px',             // shorter height
+          display: 'flex',
+          alignItems: 'flex-start',    // push content to top
+          justifyContent: 'center',
+        }}
+      >
+        <Typography
+          variant="h3"
+          fontWeight="bold"
+          sx={{
+            mt: 2,                      // move it down slightly if needed
+          }}
+        >
+          Foodie
+        </Typography>
+      </Box>
 
 
       {/* ICONS SECTION */}
@@ -62,7 +65,7 @@ export const LandingPage = () => {
             <CalendarMonthIcon fontSize="inherit" />
           </IconButton>
           <Typography variant="h6" sx={{ mt: 2 }}>
-            <Link href="#" underline="hover">
+            <Link to="/booking" style={{ textDecoration: 'none' }}>
               Book a table
             </Link>
           </Typography>
@@ -83,7 +86,7 @@ export const LandingPage = () => {
             <DeliveryDiningIcon fontSize="inherit" />
           </IconButton>
           <Typography variant="h6" sx={{ mt: 2 }}>
-            <Link href="#" underline="hover">
+            <Link to="/booking" style={{ textDecoration: 'none' }}>
               Order for home
             </Link>
           </Typography>
@@ -104,7 +107,7 @@ export const LandingPage = () => {
             <QrCodeScannerIcon fontSize="inherit" />
           </IconButton>
           <Typography variant="h6" sx={{ mt: 2 }}>
-            <Link href="#" underline="hover">
+            <Link to="/booking" style={{ textDecoration: 'none' }}>
               Scan & order
             </Link>
           </Typography>
@@ -122,16 +125,16 @@ export const LandingPage = () => {
         }}
       >
         <Box sx={{ mt: 3 }}>
-          <Link href="#" underline="hover" color="inherit" sx={{ mx: 2 }}>
+          <Link to="/booking" style={{ textDecoration: 'none' }}>
             About Us
           </Link>
-          <Link href="#" underline="hover" color="inherit" sx={{ mx: 2 }}>
+          <Link to="/booking" style={{ textDecoration: 'none' }}>
             Contact
           </Link>
-          <Link href="#" underline="hover" color="inherit" sx={{ mx: 2 }}>
+          <Link to="/booking" style={{ textDecoration: 'none' }}>
             Privacy Policy
           </Link>
-          <Link href="#" underline="hover" color="inherit" sx={{ mx: 2 }}>
+          <Link to="/booking" style={{ textDecoration: 'none' }}>
             Terms of Service
           </Link>
         </Box>
