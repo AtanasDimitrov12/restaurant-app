@@ -1,19 +1,47 @@
 import { Meteor } from 'meteor/meteor';
-import { Reservations, WaitingList, Reservation, WaitingListEntry } from './collections';
+import { check } from 'meteor/check';
+import { Reservations, WaitingList } from './collections';
+import { Reservation, WaitingListEntry } from './types';
+
+// Helper to parse HH:mm to Date object
+const parseTime = (dateStr: string, timeStr: string): Date => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const date = new Date(dateStr);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
 
 Meteor.methods({
-  'createReservation'(data: {
+  async createReservation(data: {
     date: string;
     timeSlot: string;
     partySize: number;
     customerName: string;
     customerEmail: string;
-  }): { success: boolean } {
-    const { date, timeSlot } = data;
+  }): Promise<{ success: boolean }> {
+    check(data.date, String);
+    check(data.timeSlot, String);
+    check(data.partySize, Number);
+    check(data.customerName, String);
+    check(data.customerEmail, String);
 
-    const existing = Reservations.findOne({ date, timeSlot });
-    if (existing) {
-      throw new Meteor.Error('slot-full', 'Slot already booked');
+    const reservationDuration = 90; // minutes
+    const requestedStart = parseTime(data.date, data.timeSlot);
+    const requestedEnd = new Date(requestedStart.getTime() + reservationDuration * 60000);
+
+    // Find overlapping reservations on the same date
+    const overlapping = await Reservations.findOneAsync({
+      date: data.date,
+      $expr: {
+        $lt: [
+          { $toDate: { $concat: [data.date, 'T', '$timeSlot'] } }, // Convert to Date for comparison
+          requestedEnd,
+        ],
+      },
+    });
+
+    if (overlapping) {
+      throw new Meteor.Error('slot-full', 'Time slot overlaps with another reservation');
     }
 
     const newReservation: Reservation = {
@@ -22,21 +50,20 @@ Meteor.methods({
       confirmed: true,
     };
 
-    Reservations.insert(newReservation);
+    await Reservations.insertAsync(newReservation);
 
     return { success: true };
   },
 
-  'addToWaitingList'(data: {
+  async addToWaitingList(data: {
     date: string;
     timeSlot: string;
     partySize: number;
     customerName: string;
     customerEmail: string;
     flexibilityRange?: string;
-  }): { success: boolean } {
-    const revenueScore =
-      data.partySize * 40 + (data.flexibilityRange ? 50 : 0);
+  }): Promise<{ success: boolean }> {
+    const revenueScore = data.partySize * 40 + (data.flexibilityRange ? 50 : 0);
 
     const entry: WaitingListEntry = {
       ...data,
@@ -44,34 +71,41 @@ Meteor.methods({
       createdAt: new Date(),
     };
 
-    WaitingList.insert(entry);
+    await WaitingList.insertAsync(entry);
 
     return { success: true };
   },
 
-  'cancelReservation'(reservationId: string): { success: boolean } {
-    const reservation = Reservations.findOne(reservationId);
+  async cancelReservation(reservationId: string): Promise<{ success: boolean }> {
+    check(reservationId, String);
+
+    const reservation = await Reservations.findOneAsync(reservationId);
     if (!reservation) {
       throw new Meteor.Error('not-found', 'Reservation not found');
     }
 
-    Reservations.remove(reservationId);
+    await Reservations.removeAsync(reservationId);
 
-    const bestMatch = WaitingList.findOne(
+    const bestMatch = await WaitingList.findOneAsync(
       { date: reservation.date, timeSlot: reservation.timeSlot },
       { sort: { revenueScore: -1, createdAt: 1 } }
     );
 
     if (bestMatch) {
-      Reservations.insert({
-        ...bestMatch,
-        createdAt: new Date(),
+      const reassignedReservation: Reservation = {
+        date: bestMatch.date,
+        timeSlot: bestMatch.timeSlot,
+        partySize: bestMatch.partySize,
+        customerName: bestMatch.customerName,
+        customerEmail: bestMatch.customerEmail,
         confirmed: true,
-      });
+        createdAt: new Date(),
+      };
 
-      WaitingList.remove(bestMatch._id!);
+      await Reservations.insertAsync(reassignedReservation);
+      await WaitingList.removeAsync(bestMatch._id!);
     }
 
     return { success: true };
-  },
+  }
 });
